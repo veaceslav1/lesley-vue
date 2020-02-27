@@ -26,7 +26,7 @@
 
       <el-table-column align="center" label="Actions" width="120">
         <template slot-scope="scope">
-          <router-link :to="'/saleorders/edit/'+scope.row.id">
+          <router-link :to="'/sale/edit/'+scope.row.id">
             <el-button type="primary" size="small" icon="el-icon-edit">
               Edit
             </el-button>
@@ -54,6 +54,7 @@ export default {
   data() {
     return {
       list: null,
+      totalItems: 0,
       listLoading: true
     }
   },
@@ -64,8 +65,8 @@ export default {
     fetchData() {
       this.listLoading = true
       getList().then(response => {
-        console.log(response)
         this.list = response.data['hydra:member']
+        this.totalItems = response.data['hydra:totalItems']
         this.listLoading = false
       })
     }

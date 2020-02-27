@@ -1,12 +1,12 @@
 <template>
-  <sale-order-editor :is-edit="true" />
+  <sale-order-editor :is-edit="false" />
 </template>
 
 <script>
 import SaleOrderEditor from './components/SaleOrderEditor'
 
 export default {
-  name: 'EditForm',
+  name: 'CreateSaleOrder',
   components: { SaleOrderEditor }
 }
 </script>
