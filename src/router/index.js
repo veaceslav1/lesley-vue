@@ -54,6 +54,27 @@ export const constantRoutes = [
       meta: { title: 'Dashboard', icon: 'dashboard' }
     }]
   },
+  {
+    path: '/sale',
+    component: Layout,
+    redirect: '/sale/orders',
+    name: 'Sales',
+    meta: { title: 'Sales', icon: 'example' },
+    children: [
+      {
+        path: 'orders',
+        name: 'Sale Orders',
+        component: () => import('@/views/saleorders/index'),
+        meta: { title: 'Sale Orders', icon: 'table' }
+      },
+      {
+        path: 'create',
+        name: 'Create Order',
+        component: () => import('@/views/saleorders/edit'),
+        meta: { title: 'Create Order', icon: 'form' }
+      }
+    ]
+  },
 
   {
     path: '/example',
