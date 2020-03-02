@@ -82,6 +82,34 @@ export const constantRoutes = [
       }
     ]
   },
+  {
+    path: '/users',
+    component: Layout,
+    redirect: '/users/list',
+    name: 'Users',
+    meta: { title: 'Users', icon: 'user' },
+    children: [
+      {
+        path: 'create',
+        name: 'CreateUser',
+        component: () => import('@/views/user/create'),
+        meta: { title: 'Create User', icon: 'edit' }
+      },
+      {
+        path: 'edit/:id(\\d+)',
+        name: 'EditUser',
+        component: () => import('@/views/user/edit'),
+        meta: { title: 'Edit user', icon: 'edit', activeMenu: '/users/list' },
+        hidden: true
+      },
+      {
+        path: 'list',
+        name: 'UsersList',
+        component: () => import('@/views/saleorders/list'),
+        meta: { title: 'User List', icon: 'table' }
+      }
+    ]
+  },
 
   // 404 page must be placed at the end !!!
   { path: '*', redirect: '/404', hidden: true }

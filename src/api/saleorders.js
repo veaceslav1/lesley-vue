@@ -7,3 +7,10 @@ export function getList(params) {
     params
   })
 }
+
+export function getSaleOrder(id) {
+  return request({
+    url: '/sale_orders/' + id,
+    method: 'get'
+  })
+}
