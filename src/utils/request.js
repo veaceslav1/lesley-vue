@@ -56,6 +56,7 @@ service.interceptors.response.use(
 
     // Unauthorized (token expired):
     if (response.status === 401) {
+      this.$router.push("/login")
 
     }
 

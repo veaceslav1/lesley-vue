@@ -6,37 +6,24 @@
           <el-date-picker v-model="form.date" type="date" placeholder="Order Date" style="width: 100%;" />
         </el-col>
       </el-form-item>
-      <el-form-item>
-        <el-col :span="11">
-          <el-input v-model="customerName"
-            prefix-icon="el-icon-user"
-            placeholder="Customer Username"
-          />
-        </el-col>
-        <el-col>
-          <li v-for="customer in customers">{{ customer.username }}</li>
-          <el-button-group>
-            <el-button v-if="!form.customer" type="success">Create {{ customerName }}</el-button>
-            <el-button v-if="form.customer" type="success">Update {{ customerName }}</el-button>
-          </el-button-group>
-        </el-col>
+      <el-form-item label="Customer">
+        <user-dinamic-field
+          :user="customer"
+          :initialstate="isEdit ? 'veiw' : 'search'"
+          v-on:select-user="setCustomer"
+        />
       </el-form-item>
     </el-form>
-    <user-editor :userId="anUserId" />
-    <input type="text" v-model="anUserId" />
   </div>
 </template>
 
 <script>
 import { getSaleOrder } from '@/api/saleorders'
-import { getUsers } from '@/api/user'
-import debounce from 'throttle-debounce/debounce';
-
-import UserEditor from '@/views/user/components/UserEditor'
+import UserDinamicField from '@/views/user/components/UserDinamicField'
 
 export default {
   name: 'SaleOrderEditor',
-  components: { UserEditor },
+  components: { UserDinamicField },
   props: {
     isEdit: {
       type: Boolean,
@@ -50,37 +37,26 @@ export default {
         date: Date(),
         customer: '',
       },
-      customerName: '',
-      customers: [],
-      customersFound: 0,
       saleOrderItems: [],
       links: [],
       theId: this.$route.params.id,
       doneLoading: false,
-      anUserId: 44
+      customer: undefined
     }
   },
-  watch: {
-    customerName: function (newName, oldName) {
-      // load only if customer field is done loadding at form creation
-      if (this.doneLoading) {
-        this.debouncedGetCustomers()
-      }
-    }
-  },
-  created: function () {
+  created() {
     this.loadData()
-  },
-  mounted() {
-    this.debouncedGetCustomers = debounce(500, this.getCustomers)
   },
   methods: {
     loadData() {
       if (this.isEdit) {
+        const saleOrder = this
         getSaleOrder(this.$route.params.id).then(response => {
           if (response.status === 200) {
-            this.form.customer = response.data.customer['@id']
-            this.customerName = response.data.customer.username
+            saleOrder.customer = response.data.customer
+            this.form.id = response.data.id
+            this.form.data = response.data.date
+            // this.form.customer = this.customer['@id']
           }
           else {
             console.log('Failed to load order')
@@ -93,27 +69,11 @@ export default {
         this.doneLoading = true
       }
     },
+    setCustomer: function (aUser) {
+      this.customer = aUser
+    },
     onSubmit() {
       this.$message('submit!')
-    },
-    getCustomers(){
-      if (!this.doneLoading) return
-      getUsers({username: this.customerName}).then(response =>  {
-        if (response.status === 200) {
-          console.log(response.data)
-          this.customersFound = response.data['hydra:totalItems']
-          this.customers = response.data['hydra:member']
-          if (this.customersFound > 0 ) {
-            this.form.customer = this.customers[0]
-          }
-          else {
-            this.form.customer
-          }
-        }
-        else {
-          this.customersList = []
-        }
-      })
     },
     onCancel() {
       this.$message({
@@ -121,33 +81,6 @@ export default {
         type: 'warning'
       })
     },
-    querySearch(queryString, cb) {
-      var links = this.links
-      var results = queryString ? links.filter(this.createFilter(queryString)) : links
-      // call callback function to return suggestions
-      cb(results)
-    },
-    createFilter(queryString) {
-      return (link) => {
-        return (link.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0)
-      }
-    },
-    fetchUsersByName() {
-      getUsers({username: this.form.customer}).then(response => {
-        if (response.status === 200) {
-          var data = response.data['hydra:member']
-          this.customers = data.length >= 1 ? data : []
-        }
-      })
-    },
-    onCustomerChange() {
-      if (this.form.customer.length > 0) {
-        this.fetchUsersByName()
-      }
-      else {
-        this.customers = []
-      }
-    }
   }
 }
 </script>
