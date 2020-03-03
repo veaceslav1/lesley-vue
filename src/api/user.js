@@ -37,3 +37,11 @@ export function getUser(id) {
     method: 'get'
   })
 }
+
+export function createUser(data) {
+  return request({
+    url: '/users',
+    method: 'post',
+    data
+  })
+}

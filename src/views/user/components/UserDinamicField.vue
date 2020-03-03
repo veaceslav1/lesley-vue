@@ -6,29 +6,35 @@
         :rules="rules"
         ref="userForm" class="form-container" @submit.prevent>
         <el-form-item prop="username">
-          <el-input v-model="searchName" prefix-icon="el-icon-search" suffix-icon="el-icon-user" placeholder="Search for User"/>
+          <el-input v-model="userForm.username"
+            @input="debouncedSearchUsers"
+            prefix-icon="el-icon-search"
+            suffix-icon="el-icon-user"
+            placeholder="Search for User"
+          />
         </el-form-item>
         <div class="found-cusomers">
           <div v-for="potentialUser in foundUsers" @click="chooseFoundUser(potentialUser)">{{ potentialUser.username }}</div>
         </div>
-        <div v-if="searchName.length > 1 && foundUsers.length === 0">
-          <div class="create-user-explain">
-            The username {{ userForm.username }} cannot be found.
-            Provide a password to create a new user account.
-          </div>
+        <template v-if="userForm.username.length > 1 && foundUsers.length === 0">
           <el-form-item prop="password">
             <el-input
-              v-model="password"
+              v-model="userForm.password"
               type="password"
               prefix-icon="el-icon-lock"
+              show-password
             />
           </el-form-item>
           <el-form-item prop="passwordRepeat">
-            <el-input v-model="passwordRepeat" type="password" prefix-icon="el-icon-lock" />
+            <el-input v-model="userForm.passwordRepeat" type="password" prefix-icon="el-icon-lock" />
           </el-form-item>
-          <el-button type="success">Create User</el-button>
-          <el-button type="warning" @click="clearSearch()">Clear</el-button>
-        </div>
+          <div>
+            <el-button type="success" @click="createUser">Create User</el-button>
+            <el-button @click="generatePassword">Generate Password</el-button>
+            <el-button type="warning" @click="clearSearch()">Clear</el-button>
+          </div>
+        </template>
+        <el-button v-if="user" @click="cancelSelect">Cancel</el-button>
       </el-form>
     </div>
     <div v-else class="user-view">
@@ -40,8 +46,9 @@
 
 <script>
 import UserEditor from '@/views/user/components/UserEditor'
-import { getUsers, getUser } from '@/api/user'
+import { getUsers, getUser, createUser } from '@/api/user'
 import debounce from 'throttle-debounce/debounce';
+import { MessageBox, Message } from 'element-ui'
 
 const defaultForm = {
   username: '',
@@ -75,27 +82,19 @@ export default {
     return {
       userForm: Object.assign({}, defaultForm),
       state: 'view',
-      searchName: '',
       doneLoading: false,
       foundUsers: [],
-      password: '',
-      passwordRepeat: '',
       rules: {
         username: [
           { required: true, message: 'Username required', trigger: 'blur' },
           { min: 2, message: 'Username length shall be at least 2 characters', trigger: 'blur' }
         ],
         password: [
-          { validator: validatePass, trigger: 'blur' }
+          { validator: validatePass, trigger: 'blur' },
+          { min: 5, message: 'Password shall be at least 5 characters long', tirgger: 'blur'}
         ],
         passwordRepeat: [{ validator: validatePass2, trigger: 'blur' }]
       }
-    }
-  },
-  watch: {
-    searchName: function (newUserForm, oldUserForm) {
-      // this.userForm.username = this.searchName
-      this.debouncedSearchUsers()
     }
   },
   mounted() {
@@ -105,13 +104,23 @@ export default {
     }
   },
   methods: {
+    resetForm(){
+      this.userForm = {
+        username: '',
+        password: '',
+        passwordRepeat: ''
+      }
+    },
     changeUser() {
-      this.searchName = ''
+      this.resetForm()
       this.state = 'search'
     },
+    cancelSelect() {
+      this.state = 'view'
+    },
     searchUsers(){
-      if (!this.searchName) return
-      getUsers({username: this.searchName}).then(response =>  {
+      if (!this.userForm.username) return
+      getUsers({username: this.userForm.username}).then(response =>  {
         if (response.status === 200) {
           this.foundUsers = response.data['hydra:member']
         }
@@ -128,9 +137,36 @@ export default {
       this.foundUsers = []
     },
     clearSearch() {
-      this.userForm.username = ''
-      this.password = ''
-      this.passwordRepeat = ''
+      this.resetForm()
+    },
+    createUser(){
+      this.$refs['userForm'].validate(valid => {
+        if (valid) {
+          var data = {
+            username: this.userForm.username,
+            password: this.userForm.password
+          }
+          const thisField = this
+          createUser(data).then(response => {
+            if (response.status === 201) {
+              thisField.$emit('select-user', response.data)
+              thisField.state = 'view'
+            }
+            else {
+              Message({
+                message: 'Failed to save new user',
+                type: 'error',
+                duration: 5 * 1000
+              })
+            }
+          })
+        }
+      })
+    },
+    generatePassword() {
+      var randomstring = Math.random().toString(36).slice(-8);
+      this.userForm.password = randomstring
+      this.userForm.passwordRepeat = randomstring
     }
   }
 }

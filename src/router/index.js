@@ -65,20 +65,20 @@ export const constantRoutes = [
         path: 'create',
         name: 'Create Order',
         component: () => import('@/views/saleorders/create'),
-        meta: { title: 'Create Order', icon: 'edit' }
+        meta: { title: 'Create Order', icon: 'form' }
       },
       {
         path: 'edit/:id(\\d+)',
         name: 'EditSaleOrder',
         component: () => import('@/views/saleorders/edit'),
-        meta: { title: 'Edit Order', icon: 'edit', activeMenu: '/sale/orders' },
+        meta: { title: 'Edit Order', icon: 'form', activeMenu: '/sale/orders' },
         hidden: true
       },
       {
         path: 'orders',
         name: 'SaleOrderList',
         component: () => import('@/views/saleorders/list'),
-        meta: { title: 'Order List', icon: 'list' }
+        meta: { title: 'Order List', icon: 'table' }
       }
     ]
   },
